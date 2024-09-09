@@ -4,7 +4,9 @@ package com.web.crud.service;
 import com.web.crud.repository.UserRepository;
 import com.web.crud.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +23,7 @@ public class UserService {
     }
 
     // Get all users
+    @Cacheable(value = "users", key = "#id")
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
