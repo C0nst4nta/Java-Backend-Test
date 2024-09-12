@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   app:
     build: .
@@ -8,8 +9,11 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/mydb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
+      SPRING_REDIS_HOST: redis-server
+      SPRING_REDIS_PORT: 6379
     depends_on:
       - db
+      - redis-server
 
   db:
     image: postgres:latest
@@ -20,34 +24,24 @@ services:
     ports:
       - "5432:5432"
 
-
   redis-server:
-      image: redis:latest
-      container_name: redis-server-test
-      ports:
-          - "6380:6379"
-      volumes:
-          - /data
-      command: >
-          sh -c '
-            mkdir -p /usr/local/etc/redis &&
-            echo "bind 0.0.0.0" > /usr/local/etc/redis/redis.conf &&
-            echo "requirepass $REDIS_PASSWORD" >> /usr/local/etc/redis/redis.conf &&
-            echo "appendonly yes" >> /usr/local/etc/redis/redis.conf &&
-            echo "appendfsync everysec" >> /usr/local/etc/redis/redis.conf &&
-            echo "user default on nopass ~* +@all" > /usr/local/etc/redis/users.acl &&
-            echo "user $REDIS_USER on >$REDIS_USER_PASSWORD ~* +@all" >> /usr/local/etc/redis/users.acl &&
-            redis-server /usr/local/etc/redis/redis.conf --aclfile /usr/local/etc/redis/users.acl
-          '
-      healthcheck:
-          test: [ "CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping" ]
-          interval: 30s
-          timeout: 10s
-          retries: 5
-      restart: unless-stopped
-      tty: true
-      stdin_open: true
+    image: redis:latest
+    container_name: redis-server-test
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
 
+volumes:
+  redis-data:
 
 
 
